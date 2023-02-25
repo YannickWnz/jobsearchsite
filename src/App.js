@@ -28,6 +28,7 @@ function App() {
     const [formState, setFormState] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const [jobNo, setJobNo] = useState(5)
+    const [jobLoading, setJobLoading] = useState(false)
     const [url, setUrl] = useState('https://remotive.com/api/remote-jobs')
     // const [url, setUrl] = useState('https://remotive.com/api/remote-jobs?search=php&20developer&limit=4')
 
@@ -45,9 +46,7 @@ function App() {
 
         setFormState(true)
         setTitleSearch(search)
-        console.log(titleSearch)
 
-        // setUrl(`https://remotive.com/api/remote-jobs?search=${search}&limit=${jobNo}`)
         setUrl(`https://remotive.com/api/remote-jobs?search=${search}`)
 
         setIsLoading(true)
@@ -55,8 +54,10 @@ function App() {
     }
 
     const handleSetJobNo = () => {
+        setJobLoading(true)
         const timer = setTimeout(() => {
             setJobNo((prev) => prev + 2)
+            setJobLoading(false)
         }, 1000)
         return () => clearTimeout(timer)
     }
@@ -168,8 +169,7 @@ function App() {
                 {/* <div className='job-wrapper'></div> */}
                 
                 {data.length > 0 && <div className='load-more-btn-wrapper'>
-                    {/* <button onClick={handleSetJobNo} >Load More</button> */}
-                    <button onClick={handleSetJobNo} >Load More</button>
+                    <button onClick={handleSetJobNo} >{jobLoading ? 'Loading...' : 'Load More'}</button>
                 </div>}
             </div>
         </div>
