@@ -1,12 +1,13 @@
 import './App.css';
 // import { BrowserRouter, Route } from 'react-router-dom'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, Switch } from 'react-router-dom';
 import SearchSection from './SearchSection/SearchSection';
 import JobsSection from './JobsSection/JobsSection';
 import './SearchSection/SearchSectionCSS/SearchSection.scss'
 import './JobsSection/JobsSectionCSS/JobsSection.scss'
 import useFetch from './hooks/useFetch'
+import { isCompositeComponent } from 'react-dom/test-utils';
 
 
 
@@ -23,31 +24,23 @@ function App() {
 
     const [titleSearch, setTitleSearch] = useState('')
     const [errorMsg, setErrorMsg] = useState(false)
-    const [data, setData] = useState('')
+    const [data, setData] = useState([])
     const [formState, setFormState] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
+    const [jobNo, setJobNo] = useState(2)
     // const [url, setUrl] = useState('https://remotive.com/')
-    const [url, setUrl] = useState('https://remotive.com/api/remote-jobs?search=php&20developer&limit=4')
-
-    // let url = `https://remotive.com/api/remote-jobs?search=${titleSearch}&limit=1`;
-    // let url = `https://remotive.com/api/remote-jobs?search=`+titleSearch;
-    
-    if (formState) {}
-
-    const test = (k) => {
-        if(formState) {
-            console.log(k)
-        }
-    }
+    // const [url, setUrl] = useState('https://remotive.com/api/remote-jobs?limit=1')
+    const [url, setUrl] = useState('https://remotive.com/api/remote-jobs')
+    // const [url, setUrl] = useState('https://remotive.com/api/remote-jobs?search=php&20developer&limit=4')
 
     // useEffect(() => {
     //     if(formState) {
     //         console.log(url)
-    //         console.log(titleSearch)
     //     }
-    // }, [formState])
+    // }, [url])
 
        // function to run on form submit
-       const handleSearchSubmit = (e) => {
+        const handleSearchSubmit = (e) => {
         e.preventDefault()
 
         if(titleSearch.length == 0) {
@@ -55,30 +48,45 @@ function App() {
             return
         }
 
-        // setUrl(`https://remotive.com/api/remote-jobs?category=${titleSearch}&limit=1`)
-
-        // setTitleSearch('titleSearch')
-
-        // console.log(titleSearch)
-        // console.log(url)
-        // handleSearchInput(titleSearch)
-        console.log('yooo')
-
+        let trimInput = titleSearch.trim()
+        let search = trimInput.replace(/\s/g, '%20')
 
         setFormState(true)
+        setTitleSearch(search)
+
+        // setUrl(`https://remotive.com/api/remote-jobs?search=${search}&limit=15`)
+        setUrl(`https://remotive.com/api/remote-jobs?search=${search}&limit=${jobNo}`)
+
+        setIsLoading(true)
         resetForm()
     }
 
+    const handleSetJobNo = useCallback(() => {
+        // setJobNo((previous) => previous + 2)
+        // const timer = setTimeout(() => {
+            setJobNo((prev) => prev + 1)
+            setUrl(`https://remotive.com/api/remote-jobs?search=${titleSearch}&limit=${jobNo}`)
+            console.log(url)
+        // }, 1000)
+        // return () => clearTimeout(timer)
+    })
+
+    // useEffect(() => {
+    //     handleSetJobNo()
+    // }, [handleSetJobNo])
 
     useEffect(() => {
 
         const fetchData = async () => {
             try {
                 if(formState) {
+                    console.log(isLoading)
                     const res = await fetch(url)
                     const json = await res.json()
-                    console.log(url)
-                    console.log(json)
+                    // console.log(url)
+                    // console.log(json)
+                    setData(json.jobs)
+                    setIsLoading(false)
                 }
             } catch (err) {
                 console.log(err)
@@ -86,42 +94,11 @@ function App() {
         }
 
         fetchData(url);
-
-    }, [formState])
-
-
-
-    const fetchApi = async (url) => {
-        const response = await fetch(url)
-        const json = await response.json()
-        console.log(json)
-    }
-
-    // useEffect(() => {
-    //     fetchApi()
-    // }, [])
-
-
-    // function handling error if input is empty on form submit
-    const handleSearchInput = (input) => {
-        if(input.length == 0) {
-            setErrorMsg(true)
-            return false;
-        }
-    }
-
-    const handleTitle = (e) => {
-        const name = e.target.value
-        console.log(name)
-    }
+    }, [url])
     
     const resetForm = () => {
         setTitleSearch('')
     }
-    
-        // const handleCheckboxInput = (e) => {
-        //     setTimeOption(e.target.checked)
-        // }
 
     return (
         <div className="App">
@@ -139,11 +116,10 @@ function App() {
                                 type='text' 
                                 name='title'
                                 placeholder='Filter by title, expertise...' 
-                                // onChange={(e) => setTitleSearch(e.target.value)}   
                                 onChange={(e) => {
                                     setTitleSearch(e.target.value)
                                     setErrorMsg(false)
-                                }}   
+                                }}
                                 value={titleSearch}
                             />
                             </div>
@@ -178,8 +154,21 @@ function App() {
             {/* job section start */}
             <div className='jobs-section'>
             <div className='jobs-section-container'>
-                <div className="jobs-wrapper">
-                    <div className='job'>
+                {isLoading && <div className='loader'>Loading...</div>}
+                {!isLoading && <div className="jobs-wrapper">
+                {data?.map(job => {  return <div key={job.id} onClick={() => console.log(job.id)} className='job'>
+                        <div className='company-logo'></div>
+                        <div className='job-posting-time'>
+                            <p>5h ago</p>
+                            <span></span>
+                            <p>Full time</p>
+                        </div>
+                        <p className='job-title'>{job.title}</p>
+                        <p className='company-name'>{job.company_name}</p>
+                        <p className='country'>{job.candidate_required_location}</p>
+                    </div>
+                })}
+                    {/* <div className='job'>
                         <div className='company-logo'></div>
                         <div className='job-posting-time'>
                             <p>5h ago</p>
@@ -189,101 +178,14 @@ function App() {
                         <p className='job-title'>iOS Engineer</p>
                         <p className='company-name'>Vector</p>
                         <p className='country'>Kenya</p>
-                    </div>
-                    <div className='job'>
-                        <div className='company-logo'></div>
-                        <div className='job-posting-time'>
-                            <p>20h ago</p>
-                            <span></span>
-                            <p>Part time</p>
-                        </div>
-                        <p className='job-title'>Midlevel Back end Engineer</p>
-                        <p className='company-name'>Scoot</p>
-                        <p className='country'>United States</p>
-                    </div>
-                    <div className='job'>
-                        <div className='company-logo'></div>
-                        <div className='job-posting-time'>
-                            <p>1d ago</p>
-                            <span></span>
-                            <p>Full time</p>
-                        </div>
-                        <p className='job-title'>Senior Application Engineer</p>
-                        <p className='company-name'>Office Lite</p>
-                        <p className='country'>Japan</p>
-                    </div>
-                    <div className='job'>
-                        <div className='company-logo'></div>
-                        <div className='job-posting-time'>
-                            <p>1d ago</p>
-                            <span></span>
-                            <p>Full time</p>
-                        </div>
-                        <p className='job-title'>Senior Application EngineerSenior Application EngineerSenior Application Engineer</p>
-                        <p className='company-name'>Office Lite</p>
-                        <p className='country'>Japan</p>
-                    </div>
-                    <div className='job'>
-                        <div className='company-logo'></div>
-                        <div className='job-posting-time'>
-                            <p>1month ago</p>
-                            <span></span>
-                            <p>Part time</p>
-                        </div>
-                        <p className='job-title'>Full Stack Developer</p>
-                        <p className='company-name'>Crowdfund</p>
-                        <p className='country'>New Zealand</p>
-                    </div>
-                    <div className='job'>
-                        <div className='company-logo'></div>
-                        <div className='job-posting-time'>
-                            <p>4d ago</p>
-                            <span></span>
-                            <p>Part time time</p>
-                        </div>
-                        <p className='job-title'>Technical Lead Engineer</p>
-                        <p className='company-name'>Typemaster</p>
-                        <p className='country'>United Kingdom</p>
-                    </div>
-                    <div className='job'>
-                        <div className='company-logo'></div>
-                        <div className='job-posting-time'>
-                            <p>4d ago</p>
-                            <span></span>
-                            <p>Part time time</p>
-                        </div>
-                        <p className='job-title'>Technical Lead Engineer</p>
-                        <p className='company-name'>Typemaster</p>
-                        <p className='country'>United Kingdom</p>
-                    </div>
-                    <div className='job'>
-                        <div className='company-logo'></div>
-                        <div className='job-posting-time'>
-                            <p>4d ago</p>
-                            <span></span>
-                            <p>Part time time</p>
-                        </div>
-                        <p className='job-title'>Technical Lead Engineer</p>
-                        <p className='company-name'>Typemaster</p>
-                        <p className='country'>United Kingdom</p>
-                    </div>
-                    <div className='job'>
-                        <div className='company-logo'></div>
-                        <div className='job-posting-time'>
-                            <p>4d ago</p>
-                            <span></span>
-                            <p>Part time time</p>
-                        </div>
-                        <p className='job-title'>Technical Lead Engineer</p>
-                        <p className='company-name'>Typemaster</p>
-                        <p className='country'>United Kingdom</p>
-                    </div>
-                </div>
+                    </div> */}
+                    
+                </div>}
                 {/* <div className='job-wrapper'></div> */}
                 
-                <div className='load-more-btn-wrapper'>
-                    <button>Load More</button>
-                </div>
+                {data.length > 0 && <div className='load-more-btn-wrapper'>
+                    <button onClick={handleSetJobNo} >Load More</button>
+                </div>}
             </div>
         </div>
 
