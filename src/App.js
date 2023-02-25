@@ -27,17 +27,9 @@ function App() {
     const [data, setData] = useState([])
     const [formState, setFormState] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
-    const [jobNo, setJobNo] = useState(2)
-    // const [url, setUrl] = useState('https://remotive.com/')
-    // const [url, setUrl] = useState('https://remotive.com/api/remote-jobs?limit=1')
+    const [jobNo, setJobNo] = useState(5)
     const [url, setUrl] = useState('https://remotive.com/api/remote-jobs')
     // const [url, setUrl] = useState('https://remotive.com/api/remote-jobs?search=php&20developer&limit=4')
-
-    // useEffect(() => {
-    //     if(formState) {
-    //         console.log(url)
-    //     }
-    // }, [url])
 
        // function to run on form submit
         const handleSearchSubmit = (e) => {
@@ -53,27 +45,21 @@ function App() {
 
         setFormState(true)
         setTitleSearch(search)
+        console.log(titleSearch)
 
-        // setUrl(`https://remotive.com/api/remote-jobs?search=${search}&limit=15`)
-        setUrl(`https://remotive.com/api/remote-jobs?search=${search}&limit=${jobNo}`)
+        // setUrl(`https://remotive.com/api/remote-jobs?search=${search}&limit=${jobNo}`)
+        setUrl(`https://remotive.com/api/remote-jobs?search=${search}`)
 
         setIsLoading(true)
         resetForm()
     }
 
-    const handleSetJobNo = useCallback(() => {
-        // setJobNo((previous) => previous + 2)
-        // const timer = setTimeout(() => {
-            setJobNo((prev) => prev + 1)
-            setUrl(`https://remotive.com/api/remote-jobs?search=${titleSearch}&limit=${jobNo}`)
-            console.log(url)
-        // }, 1000)
-        // return () => clearTimeout(timer)
-    })
-
-    // useEffect(() => {
-    //     handleSetJobNo()
-    // }, [handleSetJobNo])
+    const handleSetJobNo = () => {
+        const timer = setTimeout(() => {
+            setJobNo((prev) => prev + 2)
+        }, 1000)
+        return () => clearTimeout(timer)
+    }
 
     useEffect(() => {
 
@@ -83,8 +69,6 @@ function App() {
                     console.log(isLoading)
                     const res = await fetch(url)
                     const json = await res.json()
-                    // console.log(url)
-                    // console.log(json)
                     setData(json.jobs)
                     setIsLoading(false)
                 }
@@ -94,7 +78,7 @@ function App() {
         }
 
         fetchData(url);
-    }, [url])
+    }, [url, jobNo])
     
     const resetForm = () => {
         setTitleSearch('')
@@ -156,7 +140,7 @@ function App() {
             <div className='jobs-section-container'>
                 {isLoading && <div className='loader'>Loading...</div>}
                 {!isLoading && <div className="jobs-wrapper">
-                {data?.map(job => {  return <div key={job.id} onClick={() => console.log(job.id)} className='job'>
+                {data?.slice(0, jobNo).map(job => {  return <div key={job.id} onClick={() => console.log(job.id)} className='job'>
                         <div className='company-logo'></div>
                         <div className='job-posting-time'>
                             <p>5h ago</p>
@@ -184,6 +168,7 @@ function App() {
                 {/* <div className='job-wrapper'></div> */}
                 
                 {data.length > 0 && <div className='load-more-btn-wrapper'>
+                    {/* <button onClick={handleSetJobNo} >Load More</button> */}
                     <button onClick={handleSetJobNo} >Load More</button>
                 </div>}
             </div>
